@@ -1,7 +1,7 @@
 require_relative "../../repositories/story_repository"
 
 class FindNewStories
-  STORY_AGE_THRESHOLD_DAYS = 3
+  STORY_AGE_THRESHOLD_DAYS = 7
 
   def initialize(raw_feed, feed_id, last_fetched, latest_entry_id = nil)
     @raw_feed = raw_feed

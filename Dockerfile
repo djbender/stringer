@@ -1,4 +1,4 @@
-FROM ruby:2.3.3
+FROM ruby:2.7
 
 ENV RACK_ENV=production
 ENV PORT=8080
@@ -7,12 +7,19 @@ EXPOSE 8080
 
 WORKDIR /app
 ADD Gemfile Gemfile.lock /app/
-RUN bundle install --deployment
 
-RUN apt-get update \
+ARG BUNDLER_VERSION=2.2.12
+
+RUN gem install bundler:${BUNDLER_VERSION}
+RUN bundle config --local deployment 'true' && bundle install
+
+RUN set -eu; \
+  \
+  apt-get update \
     && apt-get install -y --no-install-recommends \
-      supervisor locales nodejs \
-    && apt-get clean \
+      supervisor \
+      locales \
+      nodejs \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales \
@@ -25,8 +32,10 @@ ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.
     SUPERCRONIC=supercronic-linux-amd64 \
     SUPERCRONIC_SHA1SUM=96960ba3207756bb01e6892c978264e5362e117e
 
-RUN curl -fsSLO "$SUPERCRONIC_URL" \
- && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+RUN set -eu; \
+ \
+ curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM} ${SUPERCRONIC}" | sha1sum -c - \
  && chmod +x "$SUPERCRONIC" \
  && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
  && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
